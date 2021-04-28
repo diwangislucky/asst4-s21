@@ -59,6 +59,9 @@ void compute(int procID, int nproc)
         for (source = 1; source < nproc; source++) {
             startIndex = source * span;
             endIndex = min(numIterations, startIndex + span);
+            // hmmmm I get what this does.
+            //
+            // why no 15418 collective operations?
             MPI_Recv(&outputs[startIndex], endIndex - startIndex, MPI_FLOAT, source, tag, MPI_COMM_WORLD, &status);
         }
     }
