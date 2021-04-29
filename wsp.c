@@ -10,6 +10,8 @@
 // TODO: You may find this helpful.
 #include <mpi.h>
 
+#include "wsp.h"
+
 /*
 ________________________________________________
 
@@ -267,48 +269,3 @@ void wsp_start() {
 
   return;
 }
-
-int main(int argc, char **argv) {
-  if (argc < 4 || strcmp(argv[1], "-p") != 0)\
-      error_exit("Expecting two arguments: -p [processor count]"
-              " and [file name]\n");
-  NCORES = atoi(argv[2]);
-  if(NCORES < 1) error_exit("Illegal core count: %d\n", NCORES);
-  char *filename = argv[3];
-  FILE *fp = fopen(filename, "r");
-  if(fp == NULL) error_exit("Failed to open input file \"%s\"\n", filename);
-  int scan_ret;
-  scan_ret = fscanf(fp, "%d", &NCITIES);
-  if(scan_ret != 1) error_exit("Failed to read city count\n");
-  if(NCITIES < 2) {
-    error_exit("Illegal city count: %d\n", NCITIES);
-  } 
-  // Allocate memory and read the matrix
-  DIST = (int*)calloc(NCITIES * NCITIES, sizeof(int));
-  SYSEXPECT(DIST != NULL);
-  for(int i = 1;i < NCITIES;i++) {
-    for(int j = 0;j < i;j++) {
-      int t;
-      scan_ret = fscanf(fp, "%d", &t);
-      if(scan_ret != 1) error_exit("Failed to read dist(%d, %d)\n", i, j);
-      set_dist(i, j, t);
-      set_dist(j, i, t);
-    }
-  }
-  fclose(fp);
-  bestPath = (path_t*)malloc(sizeof(path_t));
-  bestPath->cost = INT_MAX;
-  bestPath->path = (city_t*)calloc(NCITIES, sizeof(city_t));
-  struct timespec before, after;
-  clock_gettime(CLOCK_REALTIME, &before);
-  wsp_start();
-  clock_gettime(CLOCK_REALTIME, &after);
-  double delta_ms = (double)(after.tv_sec - before.tv_sec) * 1000.0
-      + (after.tv_nsec - before.tv_nsec) / 1000000.0;
-  putchar('\n');
-  printf("============ Time ============\n");
-  printf("Time: %.3f ms (%.3f s)\n", delta_ms, delta_ms / 1000.0);
-  wsp_print_result();
-  return 0;
-}
-
